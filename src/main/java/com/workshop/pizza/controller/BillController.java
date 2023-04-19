@@ -38,7 +38,7 @@ public class BillController {
 	@GetMapping
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	public ResponseEntity<PageDto<BillDto>> getBillsBySearch(@RequestParam(defaultValue = "1") int page,
-			@RequestParam(defaultValue = "25") int size, @RequestParam(defaultValue = "") String query) {
+			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String query) {
 		if("".equals(query))
 			return ResponseEntity.ok(billService.getAllBills(page-1, size));
 		else return ResponseEntity.ok(billService.getBillsBySearch(page-1, size, query));

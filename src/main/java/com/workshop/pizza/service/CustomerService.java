@@ -112,7 +112,7 @@ public class CustomerService implements ICommonService<Customer> {
 
 	public int findByEmail(String email) {
 		Customer customer = customerRepository.findByEmail(email)
-				.orElseThrow(() -> new NotFoundException("Customer doesn't exists with " + email));
+				.orElseThrow(() -> new NotFoundException("Customer doesn't exists with email: " + email));
 		return customer.getId();
 	}
 

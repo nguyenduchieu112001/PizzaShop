@@ -1,5 +1,6 @@
 package com.workshop.pizza.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -79,32 +80,42 @@ public class ReservationService implements ICommonService<Reservation> {
 	}
 
 	public boolean checkReservationDateTime(ReservationDto reservationDto) {
-		if (reservationDto.getReservationDate().isBefore(LocalDate.now()))
-			throw new BadRequestException("You can't reserve for a past date.");
-		if (reservationDto.getReservationTime().isBefore(LocalTime.parse("12:00"))
-				|| reservationDto.getReservationTime().isAfter(LocalTime.parse("21:00"))
-				|| reservationDto.getReservationTime().isBefore(LocalTime.now()))
-			throw new BadRequestException("You can't reserve in this time.");
+		LocalDate reservationDate = reservationDto.getReservationDate();
+		LocalTime reservationTime = reservationDto.getReservationTime();
 
-		Integer totalPartySize = reservationRepository.totalPartySize(reservationDto.getReservationDate(),
-				LocalTime.parse("12:00"), reservationDto.getReservationTime());
+		if (reservationDate.isBefore(LocalDate.now()))
+			throw new BadRequestException("You can't reserve for a past date.");
+
+		if (reservationDate.getDayOfWeek() == DayOfWeek.SATURDAY) {
+			if (reservationTime.isBefore(LocalTime.parse("11:00")) || reservationTime.isAfter(LocalTime.parse("21:00")))
+				throw new BadRequestException("Reservations are only available from 11am to 21pm on Saturdays.");
+		} else if (reservationDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+			if (reservationTime.isBefore(LocalTime.parse("11:00")) || reservationTime.isAfter(LocalTime.parse("22:00")))
+				throw new BadRequestException("You are only allowed to book between 11am and 22pm on Sundays.");
+		} else {
+			if (reservationTime.isBefore(LocalTime.parse("12:00")) || reservationTime.isAfter(LocalTime.parse("21:00")))
+				throw new BadRequestException("Reservations are only available from 12pm to 21pm");
+		}
+
+		Integer totalPartySize = reservationRepository.totalPartySize(reservationDate, LocalTime.parse("12:00"),
+				reservationTime);
 		Long partySize = (totalPartySize != null) ? totalPartySize.longValue() : 0;
 
 		if (partySize >= 50) {
-			Integer sum = reservationRepository.totalPartySize(reservationDto.getReservationDate(),
-					reservationDto.getReservationTime(), reservationDto.getReservationTime().plusHours(1));
+			Integer sum = reservationRepository.totalPartySize(reservationDate, reservationTime,
+					reservationTime.plusHours(1));
 			Long sumParty = (sum != null) ? sum.longValue() : 0;
 			return (sumParty < 12);
 		}
-		return true;
 
+		return true;
 	}
 
 	public Reservation bookTable(ReservationDto reservationDto) {
 
 		if (Boolean.FALSE.equals(checkReservationDateTime(reservationDto)))
 			throw new BadRequestException(
-					"table already booked in this date, time; please choose another time, date or table, thanks!");
+					"table already booked in this date, time; please choose another time or date, thanks!");
 
 		Reservation reservation = new Reservation();
 		Customer customer = customerRepository.findById(reservationDto.getCustomer().getId())
