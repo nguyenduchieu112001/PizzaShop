@@ -110,20 +110,13 @@ public class ProductService {
 	public void updateProductSizePrice(int productId) {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new NotFoundException("Product doesn't exist"));
-		Set<ProductSize> productSizes = productSizeRepository.findByProductId(productId);
+		Set<ProductSize> productSizes = productSizeRepository.findByProductIdAndDeletedAtIsNull(productId);
 		for (ProductSize productSize : productSizes) {
 			productSize
 					.setProductPrice(setPrice(product, productSize.getSize()));
 			productSizeRepository.save(productSize);
 		}
 	}
-
-//	public boolean existProductSize(int productId, int sizeId) {
-//		Product product = productRepository.findById(productId)
-//				.orElseThrow(() -> new NotFoundException("Product doesn't exist"));
-//		Size size = sizeRepository.findById(sizeId).orElseThrow(() -> new NotFoundException("Size doesn't exist"));
-//		return productSizeRepository.existsByProductAndSize(product, size);
-//	}
 
 	public Product updateProduct(ProductRequest product, int id) {
 
@@ -169,19 +162,12 @@ public class ProductService {
 		return new PageDto<>(productDtos, totalElements, totalPages);
 	}
 	
-//	public PageDto<ProductSizeDto> getAllProducts(int page, int size, String query) {
-//		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "product.productName"));
-//		Page<ProductSize> productSizePage = productSizeRepository.findByProductProductNameContainingAndProductDeletedAtIsNull(pageable, query);
-//		List<ProductSizeDto> productSizeDtos = productSizePage.getContent().stream().map(productSizeDtoMapper).collect(Collectors.toList());
-//		long totalElements = productSizePage.getTotalElements();
-//		int totalPages = productSizePage.getTotalPages();
-//		return new PageDto<>(productSizeDtos, totalElements, totalPages);
-//	}
-	
 	public void deleteProductSize(int productId) {
-		Set<ProductSize> productSizes = productSizeRepository.findByProductId(productId);
+		Set<ProductSize> productSizes = productSizeRepository.findByProductIdAndDeletedAtIsNull(productId);
 		for(ProductSize productSize : productSizes) {
-			productSizeRepository.deleteById(productSize.getId());
+//			productSizeRepository.deleteById(productSize.getId());
+			productSize.setDeletedAt(LocalDate.now());
+			productSizeRepository.save(productSize);
 		}
 	}
 
@@ -195,9 +181,5 @@ public class ProductService {
 
 	public Optional<Product> findByProductName(String name) {
 		return productRepository.findByProductNameAndDeletedAtIsNull(name);
-	}
-
-	public List<ProductDto> findAllDistinctProducts() {
-		return productRepository.findAll().stream().map(productDtoMapper).collect(Collectors.toList());
 	}
 }

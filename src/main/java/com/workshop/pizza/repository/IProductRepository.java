@@ -21,9 +21,6 @@ public interface IProductRepository extends JpaRepository<Product, Integer> {
 
 	Page<Product> findByDeletedAtIsNull(Pageable pageable);
 
-	@Query("SELECT DISTINCT p FROM Product p WHERE p.deletedAt IS NULL GROUP BY p.productName")
-	List<Product> findAllDistinctProducts();
-
 	Page<Product> findByProductNameContainingAndDeletedAtIsNull(String query, Pageable pageable);
 
 

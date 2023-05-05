@@ -1,7 +1,5 @@
 package com.workshop.pizza.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,10 +49,11 @@ public class CustomerController {
 	@Autowired
 	private JwtService jwt;
 
-	@GetMapping("/all")
+	@GetMapping
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-	public ResponseEntity<List<Customer>> getCustomers() {
-		return ResponseEntity.ok(customerService.getAll());
+	public ResponseEntity<PageDto<CustomerDto>> getCustomers(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String query) {
+		return ResponseEntity.ok(customerService.getAllCustomers(page-1, size, query));
 	}
 
 	@PostMapping("/register")
@@ -65,24 +64,25 @@ public class CustomerController {
 	}
 
 	@GetMapping("/reservation/{id}")
-	@PreAuthorize("hasAuthority('ROLE_USER')")
+	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<PageDto<ReservationOutput>> getReservations(@PathVariable int id,
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
 		return ResponseEntity.ok(customerService.getReservations(id, page - 1, size));
 	}
 
 	@GetMapping("/bill/{id}")
-	@PreAuthorize("hasAuthority('ROLE_USER')")
+	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<PageDto<BillDto>> getBills(@PathVariable int id, @RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size) {
 		return ResponseEntity.ok(customerService.getBills(id, page - 1, size));
 	}
 
 	@PutMapping("/change-information/{id}")
-	@PreAuthorize("hasAuthority('ROLE_USER')")
-	public ResponseEntity<Customer> changeInformation(@Valid @RequestBody CustomerRequest customerRequest,
+	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+	public ResponseEntity<CustomerDto> changeInformation(@Valid @RequestBody CustomerRequest customerRequest,
 			@PathVariable int id) {
-		return ResponseEntity.ok(customerService.changeInformation(customerRequest, id));
+		customerService.changeInformation(customerRequest, id);
+		return ResponseEntity.ok(customerService.getInformation(id));
 	}
 
 	@PutMapping("/change-password/{id}")

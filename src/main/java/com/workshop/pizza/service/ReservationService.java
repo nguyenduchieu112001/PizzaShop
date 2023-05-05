@@ -85,6 +85,9 @@ public class ReservationService implements ICommonService<Reservation> {
 
 		if (reservationDate.isBefore(LocalDate.now()))
 			throw new BadRequestException("You can't reserve for a past date.");
+		
+		if(reservationTime.isBefore(LocalTime.now()))
+			throw new BadRequestException("You can't reserve for a past time.");
 
 		if (reservationDate.getDayOfWeek() == DayOfWeek.SATURDAY) {
 			if (reservationTime.isBefore(LocalTime.parse("11:00")) || reservationTime.isAfter(LocalTime.parse("21:00")))

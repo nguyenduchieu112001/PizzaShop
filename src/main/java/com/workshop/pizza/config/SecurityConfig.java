@@ -44,14 +44,15 @@ public class SecurityConfig {
 		http.csrf().disable().authorizeHttpRequests()
 				.requestMatchers("/api/v1/customer/authenticate", "/api/v1/customer/register", "/images/**",
 						"/api/v1/admin/login", "/api/orders", "/api/v1/customer/send-mail",
-						"/api/v1/customer/find-by-email", "/api/v1/customer/change-password/{id}")
-				.permitAll().and()
+						"/api/v1/customer/find-by-email", "/api/v1/customer/change-password/{id}",
+						"/api/v1/product-type", "/api/v1/product-size/product/{id}", "/api/v1/product-size/menu")
+				.permitAll().requestMatchers(AUTH_WHITELIST).permitAll().and()
 
 				.authorizeHttpRequests()
 				.requestMatchers("/api/v1/admin/sign-up", "/api/v1/bill/**", "/api/v1/reservation/**",
 						"/api/v1/customer/{id}", "/api/v1/customer/bill/{id}", "/api/v1/customer/reservation/{id}",
 						"/api/v1/customer/change-information/{id}", "/api/v1/product/**", "/api/v1/product-type/**",
-						"/api/v1/bill/pay-order", "/api/v1/customer/all", "/api/v1/admin/name",
+						"/api/v1/bill/pay-order", "/api/v1/customer", "/api/v1/admin/name",
 						"/api/v1/customer/information", "/api/v1/size/**", "/api/v1/product-size/**")
 				.authenticated().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 				.authenticationProvider(customerAuthenticationProvider())
@@ -63,6 +64,9 @@ public class SecurityConfig {
 
 		return http.build();
 	}
+
+	private static final String[] AUTH_WHITELIST = { "/api/v1/auth/**", "/v3/api-docs/**", "/v3/api-docs.yaml",
+			"/swagger-ui/**", "/swagger-ui.html" };
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {

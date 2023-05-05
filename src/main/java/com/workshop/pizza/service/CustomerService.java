@@ -68,6 +68,15 @@ public class CustomerService implements ICommonService<Customer> {
 	public List<Customer> getAll() {
 		return customerRepository.findAll();
 	}
+	
+	public PageDto<CustomerDto> getAllCustomers(int page, int size, String query) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "customerName"));
+		Page<Customer> customerPage = customerRepository.findByCustomerNameContainingOrUsernameContainingOrEmailContainingOrPhoneNumberContaining(pageable, query, query, query, query);
+		List<CustomerDto> customerDtos = customerPage.getContent().stream().map(customerDtoMapper).collect(Collectors.toList());
+		long totalElements = customerPage.getTotalElements();
+		int totalPages = customerPage.getTotalPages();
+		return new PageDto<>(customerDtos, totalElements, totalPages);
+	}
 
 	@Override
 	public Customer save(Customer t) {
@@ -200,8 +209,7 @@ public class CustomerService implements ICommonService<Customer> {
 			else
 				throw new ConflictException("PhoneNumber already exists");
 		}
-		customerRepository.save(customer);
-		return customer;
+		return customerRepository.save(customer);
 	}
 
 }

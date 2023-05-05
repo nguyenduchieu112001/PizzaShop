@@ -1,5 +1,6 @@
 package com.workshop.pizza.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,9 +42,9 @@ public class ProductSizeService {
 	public ProductSize getProductSizeById(int id) {
 		return productSizeRepository.findById(id).orElseThrow(() -> new NotFoundException("ProductSize doesn't found"));
 	}
-	
+
 	public double setPrice(Product product, Size size) {
-	    return Math.round((product.getPrice() + product.getPrice() * size.getPercentPrice()) / 1000) * 1000;
+		return Math.round((product.getPrice() + product.getPrice() * size.getPercentPrice()) / 1000) * 1000;
 	}
 
 	public void createProductSize(AddProductSizeRequest productSize) {
@@ -52,7 +53,7 @@ public class ProductSizeService {
 		for (SizeDto sizeDto : productSize.getSizes()) {
 			Size size = sizeRepository.findById(sizeDto.getId())
 					.orElseThrow(() -> new NotFoundException("Size doesn't exists"));
-			if(Boolean.FALSE.equals(productSizeRepository.existsByProductAndSize(product, size))) {
+			if (Boolean.FALSE.equals(productSizeRepository.existsByProductAndSizeAndDeletedAtIsNull(product, size))) {
 				ProductSize newProductSize = new ProductSize();
 				newProductSize.setProduct(product);
 				newProductSize.setSize(size);
@@ -71,13 +72,20 @@ public class ProductSizeService {
 	}
 
 	public void deleteProductSize(int id) {
-		productSizeRepository.deleteById(id);
+		ProductSize productSize = productSizeRepository.findById(id)
+				.orElseThrow(() -> new NotFoundException("Product Size doesn't exists"));
+		productSize.setDeletedAt(LocalDate.now());
+		productSizeRepository.save(productSize);
 	}
 
 	public List<ProductSizeDto> getProductSizeByProductId(int id) {
-
 		productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product doesn't found"));
-		return productSizeRepository.findByProductId(id).stream().map(productSizeDtoMapper)
+		return productSizeRepository.findByProductIdAndDeletedAtIsNull(id).stream().map(productSizeDtoMapper)
+				.collect(Collectors.toList());
+	}
+
+	public List<ProductSizeDto> findByDeletedAtIsNullGroupByProductId() {
+		return productSizeRepository.findByDeletedAtIsNullGroupByProductId().stream().map(productSizeDtoMapper)
 				.collect(Collectors.toList());
 	}
 }

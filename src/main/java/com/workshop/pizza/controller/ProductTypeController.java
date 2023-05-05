@@ -43,7 +43,7 @@ public class ProductTypeController {
 	}
 	
 	@GetMapping
-	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+//	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<List<ProductType>> getProductTypes() {
 		return ResponseEntity.ok(productTypeService.getProductTypes());
 	}

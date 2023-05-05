@@ -1,4 +1,4 @@
-package com.workshop.pizza.config;
+package com.workshop.pizza.controller;
 
 import java.util.List;
 
@@ -29,9 +29,14 @@ public class ProductSizeController {
 	private ProductSizeService productSizeService;
 
 	@GetMapping("/product/{id}")
-	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+//	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<List<ProductSizeDto>> getProductSizeByProductId(@PathVariable int id) {
 		return ResponseEntity.ok(productSizeService.getProductSizeByProductId(id));
+	}
+	
+	@GetMapping("/menu")
+	public ResponseEntity<List<ProductSizeDto>> findByDeletedAtIsNullGroupByProductId() {
+		return ResponseEntity.ok(productSizeService.findByDeletedAtIsNullGroupByProductId());
 	}
 	
 	@PostMapping("/add")

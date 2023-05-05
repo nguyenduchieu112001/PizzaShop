@@ -1,7 +1,6 @@
 package com.workshop.pizza.controller;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,12 +43,6 @@ public class ProductController {
 	public ResponseEntity<PageDto<ProductDto>> getProducts(@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String query) {
 		return ResponseEntity.ok(productService.getAllProducts(page - 1, size, query));
-	}
-
-	@GetMapping("/menu")
-	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
-	public ResponseEntity<List<ProductDto>> findAllDistinctProducts() {
-		return ResponseEntity.ok(productService.findAllDistinctProducts());
 	}
 
 	@GetMapping("/{id}")

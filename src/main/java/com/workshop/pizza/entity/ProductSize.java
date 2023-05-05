@@ -1,5 +1,6 @@
 package com.workshop.pizza.entity;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -42,4 +43,7 @@ public class ProductSize {
 	private Set<BillDetail> billDetails;
     
     private double productPrice;
+    
+    @JsonIgnore
+    private LocalDate deletedAt;
 }
