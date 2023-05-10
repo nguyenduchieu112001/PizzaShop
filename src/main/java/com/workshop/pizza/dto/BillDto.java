@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class BillDto {
 
 	private int id;
+	private String billCode;
 	private double total;
 	private String billStatus;
 	private LocalDate createdAt;
