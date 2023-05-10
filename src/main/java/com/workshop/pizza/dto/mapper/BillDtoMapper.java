@@ -39,7 +39,7 @@ public class BillDtoMapper implements Function<Bill, BillDto> {
 		List<BillDetail> listBillDetail = billDetailRepository.findByBillId(t.getId());
 		Set<BillDetailDto> billDetails = new HashSet<>();
 		billDetails.addAll(listBillDetail.stream().map(billDetailDtoMapper).collect(Collectors.toSet()));
-		return new BillDto(t.getId(), billDetailRepository.subtotalBill(t.getId()), t.getBillStatus(),
+		return new BillDto(t.getId(), t.getBillCode(), billDetailRepository.subtotalBill(t.getId()), t.getBillStatus(),
 				t.getCreatedAt(), newCustomer, billDetails);
 	}
 

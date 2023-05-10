@@ -14,7 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.workshop.pizza.controller.form.ReservationOutput;
+import com.workshop.pizza.controller.form.ReservationRequest;
 import com.workshop.pizza.controller.form.UUIDGenerator;
 import com.workshop.pizza.dto.PageDto;
 import com.workshop.pizza.dto.ReservationDto;
@@ -79,7 +79,7 @@ public class ReservationService implements ICommonService<Reservation> {
 		reservationRepository.save(reservation);
 	}
 
-	public boolean checkReservationDateTime(ReservationDto reservationDto) {
+	public boolean checkReservationDateTime(ReservationRequest reservationDto) {
 		LocalDate reservationDate = reservationDto.getReservationDate();
 		LocalTime reservationTime = reservationDto.getReservationTime();
 
@@ -114,7 +114,7 @@ public class ReservationService implements ICommonService<Reservation> {
 		return true;
 	}
 
-	public Reservation bookTable(ReservationDto reservationDto) {
+	public Reservation bookTable(ReservationRequest reservationDto) {
 
 		if (Boolean.FALSE.equals(checkReservationDateTime(reservationDto)))
 			throw new BadRequestException(
@@ -132,23 +132,23 @@ public class ReservationService implements ICommonService<Reservation> {
 		return reservationRepository.save(reservation);
 	}
 
-	public ReservationOutput getReservation(int id) {
+	public ReservationDto getReservation(int id) {
 		return reservationRepository.findById(id).map(reservationDtoMapper)
 				.orElseThrow(() -> new NotFoundException("Reservation doesn't exists"));
 	}
 
-	public List<ReservationOutput> getReservations() {
+	public List<ReservationDto> getReservations() {
 		List<Reservation> listReservation = reservationRepository
 				.findAll(Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 		return listReservation.stream().map(reservationDtoMapper).collect(Collectors.toList());
 	}
 
 	// Phân trang
-	public PageDto<ReservationOutput> getAllReservations(int page, int size) {
+	public PageDto<ReservationDto> getAllReservations(int page, int size) {
 		Pageable pageable = PageRequest.of(page, size,
 				Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 		Page<Reservation> reservationPage = reservationRepository.findAll(pageable);
-		List<ReservationOutput> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper)
+		List<ReservationDto> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper)
 				.collect(Collectors.toList());
 		long totalElements = reservationPage.getTotalElements();
 		int totalPages = reservationPage.getTotalPages();
@@ -156,11 +156,11 @@ public class ReservationService implements ICommonService<Reservation> {
 	}
 
 	// Tìm kiếm và phân trang
-	public PageDto<ReservationOutput> getReservationBySearch(int page, int size, String query) {
+	public PageDto<ReservationDto> getReservationBySearch(int page, int size, String query) {
 		Pageable pageable = PageRequest.of(page, size,
 				Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 		Page<Reservation> reservationPage = reservationRepository.findByReservationCodeContaining(query, pageable);
-		List<ReservationOutput> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper)
+		List<ReservationDto> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper)
 				.collect(Collectors.toList());
 		long totalElements = reservationPage.getTotalElements();
 		int totalPages = reservationPage.getTotalPages();

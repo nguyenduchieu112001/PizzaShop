@@ -19,10 +19,10 @@ import com.workshop.pizza.controller.form.AuthRequest;
 import com.workshop.pizza.controller.form.ChangePasswordForm;
 import com.workshop.pizza.controller.form.CustomerRequest;
 import com.workshop.pizza.controller.form.EmailDetails;
-import com.workshop.pizza.controller.form.ReservationOutput;
 import com.workshop.pizza.dto.BillDto;
 import com.workshop.pizza.dto.CustomerDto;
 import com.workshop.pizza.dto.PageDto;
+import com.workshop.pizza.dto.ReservationDto;
 import com.workshop.pizza.entity.Customer;
 import com.workshop.pizza.exception.BadRequestException;
 import com.workshop.pizza.exception.OkException;
@@ -65,7 +65,7 @@ public class CustomerController {
 
 	@GetMapping("/reservation/{id}")
 	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
-	public ResponseEntity<PageDto<ReservationOutput>> getReservations(@PathVariable int id,
+	public ResponseEntity<PageDto<ReservationDto>> getReservations(@PathVariable int id,
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
 		return ResponseEntity.ok(customerService.getReservations(id, page - 1, size));
 	}

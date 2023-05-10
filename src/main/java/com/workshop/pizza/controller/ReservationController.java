@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.braintreepayments.http.HttpResponse;
 import com.paypal.orders.Order;
-import com.workshop.pizza.controller.form.ReservationOutput;
+import com.workshop.pizza.controller.form.ReservationRequest;
 import com.workshop.pizza.dto.PageDto;
 import com.workshop.pizza.dto.ReservationDto;
 import com.workshop.pizza.entity.Reservation;
@@ -36,26 +36,23 @@ public class ReservationController {
 
 	@Autowired
 	private PayPalService payPalService;
-	
+
 	@GetMapping
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-	public ResponseEntity<PageDto<ReservationOutput>> getReservationBySearch(@RequestParam(defaultValue = "1") int page,
+	public ResponseEntity<PageDto<ReservationDto>> getReservationBySearch(@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "25") int size, @RequestParam(defaultValue = "") String query) {
-		if("".equals(query))
-			return ResponseEntity.ok(reservationService.getAllReservations(page-1, size));
-		else
-			return ResponseEntity.ok(reservationService.getReservationBySearch(page-1, size, query));
+		return ResponseEntity.ok(reservationService.getReservationBySearch(page - 1, size, query));
 	}
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
-	public ResponseEntity<ReservationOutput> getReservation(@PathVariable int id) {
+	public ResponseEntity<ReservationDto> getReservation(@PathVariable int id) {
 		return ResponseEntity.ok(reservationService.getReservation(id));
 	}
 
 	@PostMapping("/check-reservation")
 	@PreAuthorize("hasAuthority('ROLE_USER')")
-	public ResponseEntity<String> checkReservation(@RequestBody ReservationDto reservation) {
+	public ResponseEntity<String> checkReservation(@RequestBody ReservationRequest reservation) {
 		Boolean check = reservationService.checkReservationDateTime(reservation);
 		if (Boolean.TRUE.equals(check)) {
 			throw new OkException("You can make a reservation");
@@ -66,7 +63,7 @@ public class ReservationController {
 
 	@PostMapping("/create-order")
 	@PreAuthorize("hasAuthority('ROLE_USER')")
-	public ResponseEntity<String> createOrder(@Valid @RequestBody ReservationDto reservation) {
+	public ResponseEntity<String> createOrder(@Valid @RequestBody ReservationRequest reservation) {
 		try {
 			HttpResponse<Order> response = payPalService.createOrder(reservation);
 			String orderId = response.result().id();
@@ -78,7 +75,7 @@ public class ReservationController {
 
 	@PostMapping("/book-table")
 	@PreAuthorize("hasAuthority('ROLE_USER')")
-	public ResponseEntity<ReservationOutput> getAuthorization(@Valid @RequestBody ReservationDto reservation) {
+	public ResponseEntity<ReservationDto> getAuthorization(@Valid @RequestBody ReservationRequest reservation) {
 		Reservation newReservation = reservationService.bookTable(reservation);
 		return ResponseEntity.ok(reservationService.getReservation(newReservation.getId()));
 	}

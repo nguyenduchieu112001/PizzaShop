@@ -20,10 +20,10 @@ import org.springframework.stereotype.Service;
 import com.workshop.pizza.controller.form.ChangePasswordForm;
 import com.workshop.pizza.controller.form.CodeAndExpiration;
 import com.workshop.pizza.controller.form.CustomerRequest;
-import com.workshop.pizza.controller.form.ReservationOutput;
 import com.workshop.pizza.dto.BillDto;
 import com.workshop.pizza.dto.CustomerDto;
 import com.workshop.pizza.dto.PageDto;
+import com.workshop.pizza.dto.ReservationDto;
 import com.workshop.pizza.dto.mapper.BillDtoMapper;
 import com.workshop.pizza.dto.mapper.CustomerDtoMapper;
 import com.workshop.pizza.dto.mapper.ReservationDtoMapper;
@@ -141,10 +141,10 @@ public class CustomerService implements ICommonService<Customer> {
 		return newCustomer;
 	}
 
-	public PageDto<ReservationOutput> getReservations(int id, int page, int size) {
+	public PageDto<ReservationDto> getReservations(int id, int page, int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 		Page<Reservation> reservationPage = reservationRepository.findByCustomerId(id, pageable);
-		List<ReservationOutput> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper).collect(Collectors.toList());
+		List<ReservationDto> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper).collect(Collectors.toList());
 		long totalElements = reservationPage.getTotalElements();
 		int totalPages = reservationPage.getTotalPages();
 		return new PageDto<>(reservationDtos, totalElements, totalPages);

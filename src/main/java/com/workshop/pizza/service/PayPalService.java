@@ -21,7 +21,7 @@ import com.google.gson.JsonObject;
 import com.paypal.core.PayPalHttpClient;
 import com.workshop.pizza.controller.form.BillDetailRequest;
 import com.workshop.pizza.controller.form.BillRequest;
-import com.workshop.pizza.dto.ReservationDto;
+import com.workshop.pizza.controller.form.ReservationRequest;
 import com.workshop.pizza.entity.Product;
 import com.workshop.pizza.entity.ProductSize;
 import com.workshop.pizza.entity.Size;
@@ -76,7 +76,7 @@ public class PayPalService {
 		}
 	}
 
-	public HttpResponse<Order> createOrder(ReservationDto reservation) throws IOException {
+	public HttpResponse<Order> createOrder(ReservationRequest reservation) throws IOException {
 		OrdersCreateRequest request = new OrdersCreateRequest();
 		request.prefer("return=representation");
 
