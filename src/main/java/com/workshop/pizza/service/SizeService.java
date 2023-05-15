@@ -10,10 +10,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.workshop.pizza.dto.PageDto;
+import com.workshop.pizza.entity.Product;
+import com.workshop.pizza.entity.ProductSize;
 import com.workshop.pizza.entity.Size;
+import com.workshop.pizza.exception.ConflictException;
 import com.workshop.pizza.exception.MethodNotAllowedException;
 import com.workshop.pizza.exception.NotFoundException;
 import com.workshop.pizza.exception.OkException;
+import com.workshop.pizza.repository.IProductRepository;
 import com.workshop.pizza.repository.IProductSizeRepository;
 import com.workshop.pizza.repository.ISizeRepository;
 
@@ -25,6 +29,9 @@ public class SizeService {
 
 	@Autowired
 	private IProductSizeRepository productSizeRepository;
+	
+	@Autowired
+	private IProductRepository productRepository;
 
 	public List<Size> listSizes() {
 		return sizeRepository.findAll();
@@ -37,14 +44,30 @@ public class SizeService {
 	public Size save(Size size) {
 		return sizeRepository.save(size);
 	}
+	
+	public void updateproductSize(Size size) {
+		List<ProductSize> productSizes = productSizeRepository.findBySize(size);
+		for (ProductSize productSize : productSizes) {
+			Product product = productRepository.findById(productSize.getProduct().getId())
+					.orElseThrow(() -> new NotFoundException("Product doesn't exists"));
+			double newPrice = Math.round((product.getPrice() + product.getPrice() * size.getPercentPrice()) / 1000) * 1000;
+			productSize.setProductPrice(newPrice);
+			productSizeRepository.save(productSize);
+		}
+	}
 
 	public Size update(Size size, int id) {
 		Size existSize = sizeRepository.findById(id)
 				.orElseThrow(() -> new NotFoundException("Product Size doesn't exists"));
-		if (size.getName() != null)
+		if(existSize.getName().equals(size.getName()))
 			existSize.setName(size.getName());
-		if (size.getPercentPrice() != 0)
-			existSize.setPercentPrice(size.getPercentPrice());
+		else
+			if(sizeRepository.findByName(size.getName()) == null)
+				existSize.setName(size.getName());
+			else throw new ConflictException("Product size name is already exists");
+			
+		existSize.setPercentPrice(size.getPercentPrice());
+		updateproductSize(existSize);
 		return sizeRepository.save(existSize);
 	}
 
@@ -54,8 +77,7 @@ public class SizeService {
 		if (productSizeRepository.existsBySize(size)) {
 			throw new MethodNotAllowedException(
 					"You cannot delete this Product Size because there are Products with values associated with it. ");
-		}
-		else {
+		} else {
 			sizeRepository.deleteById(id);
 			throw new OkException("Delete completed with id: " + id);
 		}
@@ -64,7 +86,7 @@ public class SizeService {
 	public Size findByName(String name) {
 		return sizeRepository.findByName(name);
 	}
-	
+
 	public PageDto<Size> getProductSizes(int page, int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
 		Page<Size> productSizePage = sizeRepository.findAll(pageable);
@@ -73,7 +95,7 @@ public class SizeService {
 		int totalPages = productSizePage.getTotalPages();
 		return new PageDto<>(productType, totalElements, totalPages);
 	}
-	
+
 	public PageDto<Size> getAllProductSizes(int page, int size, String query) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
 		Page<Size> productSizePage = sizeRepository.findByNameContaining(pageable, query);

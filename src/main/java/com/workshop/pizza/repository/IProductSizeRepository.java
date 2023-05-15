@@ -29,6 +29,6 @@ public interface IProductSizeRepository extends JpaRepository<ProductSize, Integ
 	@Query("SELECT ps FROM ProductSize ps WHERE ps.deletedAt IS NULL GROUP BY ps.product.id")
 	List<ProductSize> findByDeletedAtIsNullGroupByProductId();
 
-	
+	List<ProductSize> findBySize(Size size);
 
 }

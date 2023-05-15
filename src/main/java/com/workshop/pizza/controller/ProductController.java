@@ -57,8 +57,6 @@ public class ProductController {
 	@PostMapping("/add")
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	public ResponseEntity<Product> addProduct(@Valid @RequestBody AddProductRequest product) {
-//		if (productService.findByProductName(product.getProductName()).isPresent())
-//			throw new ConflictException("Product name already exists");
 		return ResponseEntity.ok(productService.save(product));
 	}
 

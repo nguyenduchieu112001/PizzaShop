@@ -165,7 +165,6 @@ public class ProductService {
 	public void deleteProductSize(int productId) {
 		Set<ProductSize> productSizes = productSizeRepository.findByProductIdAndDeletedAtIsNull(productId);
 		for(ProductSize productSize : productSizes) {
-//			productSizeRepository.deleteById(productSize.getId());
 			productSize.setDeletedAt(LocalDate.now());
 			productSizeRepository.save(productSize);
 		}
