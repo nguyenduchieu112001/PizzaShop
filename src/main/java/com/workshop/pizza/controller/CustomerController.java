@@ -19,6 +19,7 @@ import com.workshop.pizza.controller.form.AuthRequest;
 import com.workshop.pizza.controller.form.ChangePasswordForm;
 import com.workshop.pizza.controller.form.CustomerRequest;
 import com.workshop.pizza.controller.form.EmailDetails;
+import com.workshop.pizza.controller.form.ForgotPasswordForm;
 import com.workshop.pizza.dto.BillDto;
 import com.workshop.pizza.dto.CustomerDto;
 import com.workshop.pizza.dto.PageDto;
@@ -53,7 +54,7 @@ public class CustomerController {
 	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 	public ResponseEntity<PageDto<CustomerDto>> getCustomers(@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String query) {
-		return ResponseEntity.ok(customerService.getAllCustomers(page-1, size, query));
+		return ResponseEntity.ok(customerService.getAllCustomers(page - 1, size, query));
 	}
 
 	@PostMapping("/register")
@@ -85,12 +86,24 @@ public class CustomerController {
 		return ResponseEntity.ok(customerService.getInformation(id));
 	}
 
-	@PutMapping("/change-password/{id}")
+	@PutMapping("/forgot-password/{id}")
 	@PreAuthorize("permitAll()")
-	public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordForm changepassword,
-			@PathVariable int id) {
-		customerService.changePassword(changepassword, id);
+	public ResponseEntity<String> changePassword(@Valid @RequestBody ForgotPasswordForm forgot, @PathVariable int id) {
+		customerService.forgotPassword(forgot, id);
 		throw new OkException("Change Password successful!");
+	}
+
+	@PutMapping("/change-password")
+	@PreAuthorize("hasAuthority('ROLE_USER')")
+	public ResponseEntity<String> changePassword(@RequestBody ChangePasswordForm form) {
+		Authentication authentication = authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(form.getUsername(), form.getPassword()));
+		Customer customer = customerService.findByUsername(form.getUsername());
+		if (authentication.isAuthenticated()) {
+			customerService.changePassword(customer, form.getNewPassword());
+			throw new OkException("Change password successfully");
+		} else
+			throw new BadRequestException("Invalid password.");
 	}
 
 	@PostMapping("/send-mail")

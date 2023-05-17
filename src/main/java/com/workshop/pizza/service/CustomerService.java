@@ -17,7 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.workshop.pizza.controller.form.ChangePasswordForm;
+import com.workshop.pizza.controller.form.ForgotPasswordForm;
 import com.workshop.pizza.controller.form.CodeAndExpiration;
 import com.workshop.pizza.controller.form.CustomerRequest;
 import com.workshop.pizza.dto.BillDto;
@@ -173,7 +173,7 @@ public class CustomerService implements ICommonService<Customer> {
 	}
 
 	@CacheEvict(value = "customer_code", allEntries = true)
-	public void changePassword(ChangePasswordForm changePasswordForm, int id) {
+	public void forgotPassword(ForgotPasswordForm changePasswordForm, int id) {
 		Customer customer = customerRepository.findById(id)
 				.orElseThrow(() -> new NotFoundException("Customer doesn't exists"));
 		if (isValidCode(customer.getAddress(), changePasswordForm.getCode())) {
@@ -182,6 +182,11 @@ public class CustomerService implements ICommonService<Customer> {
 		if (changePasswordForm.getPassword() != null) {
 			customer.setPassword(passwordEncoder.encode(changePasswordForm.getPassword()));
 		}
+		customerRepository.save(customer);
+	}
+	
+	public void changePassword(Customer customer, String password) {
+		customer.setPassword(passwordEncoder.encode(password));
 		customerRepository.save(customer);
 	}
 
