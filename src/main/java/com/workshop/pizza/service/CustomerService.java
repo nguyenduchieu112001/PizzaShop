@@ -1,15 +1,10 @@
 package com.workshop.pizza.service;
 
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.workshop.pizza.controller.form.ForgotPasswordForm;
-import com.workshop.pizza.controller.form.CodeAndExpiration;
 import com.workshop.pizza.controller.form.CustomerRequest;
 import com.workshop.pizza.dto.BillDto;
 import com.workshop.pizza.dto.CustomerDto;
@@ -40,8 +34,6 @@ import com.workshop.pizza.repository.IReservationRepository;
 @Service
 public class CustomerService implements ICommonService<Customer> {
 
-	@Autowired(required = true)
-	private CacheManager cacheManager;
 
 	@Autowired
 	private ICustomerRepository customerRepository;
@@ -57,22 +49,28 @@ public class CustomerService implements ICommonService<Customer> {
 
 	@Autowired
 	private CustomerDtoMapper customerDtoMapper;
-	
+
 	@Autowired
 	private ReservationDtoMapper reservationDtoMapper;
-	
+
 	@Autowired
 	private BillDtoMapper billDtoMapper;
+
+	@Autowired(required = true)
+	private EmailServiceImpl emailServiceImpl;
 
 	@Override
 	public List<Customer> getAll() {
 		return customerRepository.findAll();
 	}
-	
+
 	public PageDto<CustomerDto> getAllCustomers(int page, int size, String query) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "customerName"));
-		Page<Customer> customerPage = customerRepository.findByCustomerNameContainingOrUsernameContainingOrEmailContainingOrPhoneNumberContaining(pageable, query, query, query, query);
-		List<CustomerDto> customerDtos = customerPage.getContent().stream().map(customerDtoMapper).collect(Collectors.toList());
+		Page<Customer> customerPage = customerRepository
+				.findByCustomerNameContainingOrUsernameContainingOrEmailContainingOrPhoneNumberContaining(pageable,
+						query, query, query, query);
+		List<CustomerDto> customerDtos = customerPage.getContent().stream().map(customerDtoMapper)
+				.collect(Collectors.toList());
 		long totalElements = customerPage.getTotalElements();
 		int totalPages = customerPage.getTotalPages();
 		return new PageDto<>(customerDtos, totalElements, totalPages);
@@ -142,13 +140,15 @@ public class CustomerService implements ICommonService<Customer> {
 	}
 
 	public PageDto<ReservationDto> getReservations(int id, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
+		Pageable pageable = PageRequest.of(page, size,
+				Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 		Page<Reservation> reservationPage = reservationRepository.findByCustomerId(id, pageable);
-		List<ReservationDto> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper).collect(Collectors.toList());
+		List<ReservationDto> reservationDtos = reservationPage.getContent().stream().map(reservationDtoMapper)
+				.collect(Collectors.toList());
 		long totalElements = reservationPage.getTotalElements();
 		int totalPages = reservationPage.getTotalPages();
 		return new PageDto<>(reservationDtos, totalElements, totalPages);
-		
+
 	}
 
 	public PageDto<BillDto> getBills(int id, int page, int size) {
@@ -159,32 +159,31 @@ public class CustomerService implements ICommonService<Customer> {
 		int totalPages = billPage.getTotalPages();
 		return new PageDto<>(billDtos, totalElements, totalPages);
 	}
-	
 
-	@Cacheable("customer_code")
-	private boolean isValidCode(String recipient, String code) {
-		Cache cache = cacheManager.getCache("customer_code");
-		// Retrieve cached code and expiration time
-		CodeAndExpiration cachedCodeAndExpiration = cache.get(recipient, CodeAndExpiration.class);
+//	@Cacheable("customer_code")
+//	private boolean isValidCode(String recipient, String code) {
+//		Cache cache = cacheManager.getCache("customer_code");
+//		// Retrieve cached code and expiration time
+//		CodeAndExpiration cachedCodeAndExpiration = cache.get(recipient, CodeAndExpiration.class);
+//		System.out.println(cache);
+	// Check if cached code and expiration time are valid
+//		return !(cachedCodeAndExpiration == null || !cachedCodeAndExpiration.getCode().equals(code)
+//				|| LocalTime.now().isAfter(cachedCodeAndExpiration.getExpirationTime()));
+//	}
 
-		// Check if cached code and expiration time are valid
-		return !(cachedCodeAndExpiration == null || !cachedCodeAndExpiration.getCode().equals(code)
-				|| LocalTime.now().isAfter(cachedCodeAndExpiration.getExpirationTime()));
-	}
-
-	@CacheEvict(value = "customer_code", allEntries = true)
+//	@CacheEvict(value = "customer_code", allEntries = true)
 	public void forgotPassword(ForgotPasswordForm changePasswordForm, int id) {
 		Customer customer = customerRepository.findById(id)
 				.orElseThrow(() -> new NotFoundException("Customer doesn't exists"));
-		if (isValidCode(customer.getAddress(), changePasswordForm.getCode())) {
-			throw new BadRequestException("Code is expired");
-		}
-		if (changePasswordForm.getPassword() != null) {
+		System.out.println(emailServiceImpl.isValidCode(changePasswordForm.getCode()));
+		if (Boolean.FALSE.equals(emailServiceImpl.isValidCode(changePasswordForm.getCode()))) {
+			throw new BadRequestException("Code is expired or not correct");
+		} else if (changePasswordForm.getPassword() != null) {
 			customer.setPassword(passwordEncoder.encode(changePasswordForm.getPassword()));
 		}
 		customerRepository.save(customer);
 	}
-	
+
 	public void changePassword(Customer customer, String password) {
 		customer.setPassword(passwordEncoder.encode(password));
 		customerRepository.save(customer);

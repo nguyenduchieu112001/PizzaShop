@@ -109,7 +109,9 @@ public class CustomerController {
 	@PostMapping("/send-mail")
 	@PreAuthorize("permitAll()")
 	public ResponseEntity<String> sendMail(@RequestParam String recipient) {
-		emailServiceImpl.sendMail(recipient);
+//		emailServiceImpl.sendMail(recipient);
+//		throw new OkException("Mail Sent Successfully");
+		emailServiceImpl.sendMailByFreeMarker(recipient);
 		throw new OkException("Mail Sent Successfully");
 	}
 
